@@ -1,0 +1,141 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class DryCleaning {
+private:
+    int OrderNumber;
+    string ProductType;
+    double price;
+    string status;
+public:
+    // Конструктор по умолчанию
+    DryCleaning() {
+        OrderNumber = 0;
+        ProductType = "Не указано";
+        price = 0;
+        status = "принят";
+        
+    }
+    // Конструктор с параметрами
+    DryCleaning(int num, string type, double pr, string st) {
+        if (num > 0) {
+            OrderNumber = num;
+        }
+        else {
+            OrderNumber = 0;
+            cout << "Ошибка: номер заказа должен быть положительным" << endl;
+        }
+        ProductType = type;
+        if (pr >= 0) {
+            price = pr;
+        }
+        else {
+            price = 0;
+            cout << "Ошибка: цена не может быть отрицательной" << endl;
+        }
+        if (st == "принят" || st == "в обработке" || st == "готов" || st == "выдан") {
+            status = st;
+        }
+        else {
+            status = "принят";
+            cout << "Некорректный статус. Установлен 'принят'" << endl;
+        }
+        cout << "Создан заказ с параметрами" << endl;
+    }
+    // Деструктор
+    ~DryCleaning() {
+        cout << "Заказ № " << OrderNumber << " удалён из памяти" << endl;
+    }
+    // Геттеры
+    int getOrderNumber() {
+        return OrderNumber;
+    }
+    double getPrice() {
+        return price;
+    }
+    // Сеттеры
+    void setItemType(string type) {
+        if (!type.empty()) {
+            ProductType = type;
+        }
+        else {
+            cout << "Ошибка: тип изделия не может быть пустым" << endl;
+        }
+    }
+    void setStatus(string st) {
+        if (st == "принят" || st == "в обработке" || st == "готов" || st == "выдан") {
+            status = st;
+        }
+        else {
+            cout << "Ошибка: недопустимый статус!" << endl;
+        } 
+    }
+    // Метод 1: смена статуса последовательно
+    void nextStatus() {
+        if (status == "принят") {
+            status = "в обработке";
+            cout << "Статус изменён на 'в обработке'." << endl;
+        }
+        else if (status == "в обработке") {
+            status = "готов";
+            cout << "Статус изменён на 'готов'." << endl;
+        }
+        else if (status == "готов") {
+            status = "выдан";
+            cout << "Статус изменён на 'выдан'. Заказ завершён." << endl;
+        }
+        else if (status == "выдан") {
+            cout << "Ошибка: заказ уже выдан, дальнейшая смена статуса невозможна." << endl;
+        }
+    }
+    // Метод 2: расчёт стоимости с учётом срочности (коэффициент)
+    double calculatePriceWithUrgency(double urgencyCoeff) {
+        if (urgencyCoeff < 1.0) {
+            cout << "Коэффициент срочности не может быть меньше 1. Применён коэффициент 1.0." << endl;
+            urgencyCoeff = 1.0;
+        }
+        return price * urgencyCoeff;
+    }
+    // Метод вывода полной информации об объекте
+    void printInfo() {
+        cout << "Информация о заказе:" << endl;
+        cout << "Номер заказа: " << OrderNumber << endl;
+        cout << "Тип изделия: " << ProductType << endl;
+        cout << "Базовая стоимость: " << price << " руб." << endl;
+        cout << "Текущий статус: " << status << endl;
+    }
+};
+
+int main()
+{
+    setlocale(LC_ALL, "Russian");
+    // Создаём объекты
+    DryCleaning order1;                      // по умолчанию
+    DryCleaning order2(101, "Пальто", 1500, "принят");  // с параметрами
+
+    // Демонстрация геттеров
+    cout << "Геттер: номер заказа order2 = " << order2.getOrderNumber() << endl;
+    cout << "Геттер: цена order2 = " << order2.getPrice() << " руб." << endl;
+
+    // Демонстрация сеттеров
+    cout << "Сеттеры:" << endl;
+    order2.setItemType("Плащ");                // меняем тип
+    order2.setStatus("готов");                  // меняем статус
+
+    // Проверка валидации
+    cout << "Проверка валидации:" << endl;
+    order2.setItemType("");                     // пустой тип — ошибка
+    order2.setStatus("завершён");                // неверный статус — ошибка
+
+    // Демонстрация методов
+    cout << "Методы:" << endl;
+    order2.nextStatus();                         // готов -> выдан
+    order2.nextStatus();                         // попытка после выдан
+    cout << "Цена со срочностью (x1.5): " << order2.calculatePriceWithUrgency(1.5) << " руб." << endl;
+
+    // Вывод информации
+    order2.printInfo();
+
+    return 0;
+}
