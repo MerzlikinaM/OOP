@@ -1,0 +1,297 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class CleaningOrder {
+protected:
+    int OrderNumber;
+    string ProductType;
+    double price;
+    string status;
+public:
+    // Конструктор с параметрами
+    CleaningOrder(int num, string type, double pr, string st) {
+        if (num > 0) {
+            OrderNumber = num;
+        }
+        else {
+            OrderNumber = 0;
+            cout << "Ошибка: номер заказа должен быть положительным" << endl;
+        }
+        ProductType = type;
+        if (pr >= 0) {
+            price = pr;
+        }
+        else {
+            price = 0;
+            cout << "Ошибка: цена не может быть отрицательной" << endl;
+        }
+        if (st == "принят" || st == "в обработке" || st == "готов" || st == "выдан") {
+            status = st;
+        }
+        else {
+            status = "принят";
+            cout << "Некорректный статус. Установлен 'принят'" << endl;
+        }
+        cout << "Создан заказ с параметрами" << endl;
+    }
+    // Виртуальный деструктор
+    virtual ~CleaningOrder() {
+        cout << "Заказ №" << OrderNumber << " удалён (базовый деструктор)" << endl;
+    }
+    // Метод: смена статуса последовательно
+    void nextStatus() {
+        if (status == "принят") {
+            status = "в обработке";
+            cout << "Статус изменён на 'в обработке'." << endl;
+        }
+        else if (status == "в обработке") {
+            status = "готов";
+            cout << "Статус изменён на 'готов'." << endl;
+        }
+        else if (status == "готов") {
+            status = "выдан";
+            cout << "Статус изменён на 'выдан'. Заказ завершён." << endl;
+        }
+        else if (status == "выдан") {
+            cout << "Ошибка: заказ уже выдан, дальнейшая смена статуса невозможна." << endl;
+        }
+    }
+    // Геттеры
+    int getOrderNumber() const { return OrderNumber; }
+    string getProductType() const { return ProductType; }
+    double getPrice() const { return price; }
+    string getStatus() const { return status; }
+
+    // Сеттеры с валидацией
+    void setProductType(string type) {
+        if (!type.empty()) {
+            ProductType = type;
+        }
+        else {
+            cout << "Ошибка: тип изделия не может быть пустым." << endl;
+        }
+    }
+
+    void setStatus(string st) {
+        if (st == "принят" || st == "в обработке" || st == "готов" || st == "выдан") {
+            status = st;
+        }
+        else {
+            cout << "Ошибка: недопустимый статус!" << endl;
+        }
+    }
+
+    void setPrice(double pr) {
+        if (pr >= 0) {
+            price = pr;
+        }
+        else {
+            cout << "Ошибка: цена не может быть отрицательной!" << endl;
+        }
+    }
+    // Виртуальные функции
+    virtual double calcFinalPrice() = 0;           // расчёт итоговой стоимости
+    virtual int getEstimatedTime() = 0;            // оценка времени выполнения
+    virtual string getServiceType() = 0;           // тип услуги
+    
+    // Виртуальный метод printInfo
+    virtual void printInfo() {
+        cout << "Номер заказа: " << OrderNumber << endl;
+        cout << "Тип изделия: " << ProductType << endl;
+        cout << "Базовая стоимость: " << price << " руб." << endl;
+        cout << "Текущий статус: " << status << endl;
+        cout << "Тип услуги: " << getServiceType() << endl;
+    }
+};
+// Производный класс 1: StandardCleaning
+class StandardCleaning : public CleaningOrder {
+private:
+    // Дополнительные поля
+    string fabricType;      // тип ткани (хлопок, шерсть, синтетика и т.д.)
+    bool hasStains;         // наличие пятен
+public:
+    // Конструктор
+    StandardCleaning(int num, string type, double pr, string st,
+        string fabric, bool stains)
+        : CleaningOrder(num, type, pr, st) {
+        fabricType = fabric;
+        hasStains = stains;
+        cout << "  -> Стандартная чистка (ткань: " << fabricType << ", пятна: " << (hasStains ? "да" : "нет") << ")" << endl;
+    }
+    // Переопределение чисто виртуальных методов
+    double calcFinalPrice() override {
+        double finalPrice = price;
+        // Если есть пятна, добавляем 30%
+        if (hasStains) {
+            finalPrice += price * 0.3;
+            cout << "  Обнаружены пятна: +30% (" << price * 0.3 << " руб.)" << endl;
+        }
+        // В зависимости от типа ткани
+        if (fabricType == "шерсть") {
+            finalPrice += price * 0.2;
+            cout << "  Ткань 'шерсть': +20% (" << price * 0.2 << " руб.)" << endl;
+        }
+        else if (fabricType == "шелк") {
+            finalPrice += price * 0.4;
+            cout << "  Ткань 'шелк': +40% (" << price * 0.4 << " руб.)" << endl;
+        }
+        else if (fabricType == "кожа") {
+            finalPrice += price * 0.5;
+            cout << "  Ткань 'кожа': +50% (" << price * 0.5 << " руб.)" << endl;
+        }
+        return finalPrice;
+    }
+
+    int getEstimatedTime() override {
+        int hours = 24;  // стандартная чистка — 24 часа
+        if (hasStains) {
+            hours += 12;
+        }
+        if (fabricType == "шерсть" || fabricType == "шелк") {
+            hours += 6;
+        }
+        if (fabricType == "кожа") {
+            hours += 12;
+        }
+        return hours;
+    }
+
+    string getServiceType() override {
+        return "Стандартная чистка";
+    }
+
+    // Переопределение printInfo
+    void printInfo() override {
+        CleaningOrder::printInfo();
+        cout << "Тип ткани: " << fabricType << endl;
+        cout << "Наличие пятен: " << (hasStains ? "Да" : "Нет") << endl;
+        cout << "Итоговая стоимость: " << calcFinalPrice() << " руб." << endl;
+        cout << "Время выполнения: " << getEstimatedTime() << " часов" << endl;
+        cout << "========================================" << endl;
+    }
+};
+// Производный класс 2: ExpressCleaning
+class ExpressCleaning : public CleaningOrder {
+private:
+    // Дополнительные поля
+    int hoursToReady;           // часы до готовности
+    double urgencyCoefficient;  // коэффициент срочности
+public:
+    // Конструктор
+    ExpressCleaning(int num, string type, double pr, string st,
+        int hours, double coeff) : CleaningOrder(num, type, pr, st) {
+        if (hours > 0 && hours <= 48) {
+            hoursToReady = hours;
+        }
+        else {
+            hoursToReady = 24;
+            cout << "  Некорректное время, установлено 24 часа." << endl;
+        }
+
+        if (coeff >= 1.0 && coeff <= 3.0) {
+            urgencyCoefficient = coeff;
+        }
+        else {
+            urgencyCoefficient = 1.0;
+            cout << "  Некорректный коэффициент, установлен 1.0." << endl;
+        }
+
+        cout << "  -> Срочная чистка (готов через: " << hoursToReady
+            << " ч., коэф.: " << urgencyCoefficient << ")" << endl;
+    }
+
+    // Переопределение чисто виртуальных методов
+    double calcFinalPrice() override {
+        double finalPrice = price * urgencyCoefficient;
+
+        // Дополнительная наценка за сверхсрочный заказ (менее 12 часов)
+        if (hoursToReady < 12) {
+            finalPrice += price * 0.2;
+            cout << "  Сверхсрочный заказ: +20% (" << price * 0.2 << " руб.)" << endl;
+        }
+        return finalPrice;
+    }
+    int getEstimatedTime() override {
+        return hoursToReady;
+    }
+    string getServiceType() override {
+        return "Срочная чистка";
+    }
+    // Переопределение printInfo
+    void printInfo() override {
+        CleaningOrder::printInfo();
+        cout << "Готовность через: " << hoursToReady << " часов" << endl;
+        cout << "Коэффициент срочности: " << urgencyCoefficient << endl;
+        cout << "Итоговая стоимость: " << calcFinalPrice() << " руб." << endl;
+        cout << "========================================" << endl;
+    }
+};
+
+
+int main()
+{
+    setlocale(LC_ALL, "Russian");
+    cout << "    Демонстрация полиморфизма" << endl;
+    // Создаём массив указателей на базовый класс
+    const int SIZE = 5;
+    CleaningOrder* orders[SIZE];
+
+    // Заполняем массив объектами разных производных классов
+    orders[0] = new StandardCleaning(101, "Пальто", 1500, "принят", "шерсть", false);
+    orders[1] = new StandardCleaning(102, "Куртка", 2000, "принят", "кожа", true);
+    orders[2] = new ExpressCleaning(201, "Платье", 1200, "принят", 12, 1.5);
+    orders[3] = new ExpressCleaning(202, "Костюм", 2500, "принят", 6, 2.0);
+    orders[4] = new StandardCleaning(103, "Рубашка", 800, "принят", "хлопок", false);
+
+    cout << "\n========================================" << endl;
+    cout << "    ПОЛИМОРФНЫЙ ВЫЗОВ printInfo()" << endl;
+
+    // Демонстрация полиморфизма
+    for (int i = 0; i < SIZE; i++) {
+        orders[i]->printInfo();
+    }
+
+    cout << "\n========================================" << endl;
+    cout << "    ДЕМОНСТРАЦИЯ ВИРТУАЛЬНЫХ МЕТОДОВ" << endl;
+
+    // Вызов виртуальных методов calcFinalPrice() и getEstimatedTime()
+    for (int i = 0; i < SIZE; i++) {
+        cout << "Заказ №" << orders[i]->getOrderNumber()
+            << " (" << orders[i]->getServiceType() << "):" << endl;
+        cout << "  Итоговая стоимость: " << orders[i]->calcFinalPrice() << " руб." << endl;
+        cout << "  Время выполнения: " << orders[i]->getEstimatedTime() << " часов" << endl;
+        cout << endl;
+    }
+
+    cout << "========================================" << endl;
+    cout << "    ДЕМОНСТРАЦИЯ ОБЫЧНОГО МЕТОДА nextStatus()" << endl;
+
+    // Демонстрация обычного метода (общего для всех)
+    cout << "--- Изменение статуса заказа №101 ---" << endl;
+    orders[0]->nextStatus();   // принят -> в обработке
+    orders[0]->nextStatus();   // в обработке -> готов
+    orders[0]->nextStatus();   // готов -> выдан
+    orders[0]->nextStatus();   // выдан -> ошибка
+
+    cout << "\n--- Изменение статуса заказа №201 ---" << endl;
+    orders[2]->nextStatus();   // принят -> в обработке
+    orders[2]->nextStatus();   // в обработке -> готов
+
+    cout << "\n========================================" << endl;
+    cout << "    ИТОГОВАЯ ИНФОРМАЦИЯ ПОСЛЕ ИЗМЕНЕНИЙ" << endl;
+
+    // Вывод обновлённой информации
+    for (int i = 0; i < SIZE; i++) {
+        orders[i]->printInfo();
+    }
+
+    // Освобождение памяти
+    for (int i = 0; i < SIZE; i++) {
+        delete orders[i];
+    }
+
+    cout << "\nПрограмма завершена." << endl;
+
+    return 0;
+}
